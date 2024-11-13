@@ -8,6 +8,4 @@ public record Run(
         LocalDateTime completedOn,
         Integer miles,
         Location location
-    ) {
-
-}
+) {}
