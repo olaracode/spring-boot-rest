@@ -1,53 +1,112 @@
-# Spring Boot
+# Run Management API Documentation
 
-- [Commands](#commands);
-- [Java Log Levels and their usage](#java-log-levels-and-their-usage)
+## Overview
+> This first version 0.1 runs **in memory**. Next versions will use Databases
 
-## Commands
+This is a Spring Boot REST API designed for managing running sessions ("runs"). It allows you to create, retrieve, update, and delete run records. Each run contains details such as its ID, title, start time, completion time, distance in miles, and location type (indoor or outdoor).
 
-You can check the maven commands on the Intellij
+## Project Structure
+- **Application.java**: Entry point for the Spring Boot application.
+- **RunController.java**: REST Controller to define API endpoints for run management.
+- **RunRepository.java**: Repository layer for in-memory storage and management of runs.
+- **Run.java**: Record class representing the structure of a run.
+- **Location.java**: Enum representing possible locations (INDOOR or OUTDOOR).
 
-- Run: ./mvnw spring-boot:run
+## Endpoints
 
-# Java Log Levels and Their Usage
+### 1. Get All Runs
+- **URL**: `/api/runs`
+- **Method**: `GET`
+- **Description**: Retrieves a list of all recorded runs.
+- **Response**: `200 OK`, returns a list of all `Run` objects.
 
-In Java, logging frameworks like Log4j, SLF4J, and Java’s built-in `java.util.logging` provide various log levels to help manage and filter log messages based on their severity. Here’s a breakdown of the common log levels, from highest to lowest priority, along with guidance on when to use each.
+### 2. Get Run by ID
+- **URL**: `/api/runs/{id}`
+- **Method**: `GET`
+- **Description**: Retrieves a specific run by its ID.
+- **Path Parameter**:
+    - `id` (Integer): Unique identifier of the run.
+- **Response**:
+    - `200 OK`: Returns the `Run` object.
+    - `404 Not Found`: If the run with the specified ID is not found.
 
-## 1. `FATAL`
-- **Purpose**: Indicates a severe error that will cause the application to terminate.
-- **When to Use**: Use `FATAL` for critical situations that prevent the program from continuing, such as an unrecoverable database failure or the loss of a critical resource.
-- **Example**: Database connection is lost and cannot be reestablished.
+### 3. Create a New Run
+- **URL**: `/api/runs`
+- **Method**: `POST`
+- **Description**: Creates a new run record.
+- **Request Body**: `Run` object (in JSON format).
+- **Response**: `201 Created`
 
-## 2. `ERROR`
-- **Purpose**: Signals an error that might allow the application to continue running, but with limited functionality.
-- **When to Use**: Use `ERROR` for issues that indicate serious problems but do not crash the program, like a failed transaction or an invalid state.
-- **Example**: A user attempts to upload a file that is too large.
+### 4. Update an Existing Run
+- **URL**: `/api/runs/{id}`
+- **Method**: `PUT`
+- **Description**: Updates an existing run with new information.
+- **Path Parameter**:
+    - `id` (Integer): Unique identifier of the run to update.
+- **Request Body**: `Run` object (in JSON format).
+- **Response**:
+    - `204 No Content`: If the run is successfully updated.
+    - `404 Not Found`: If the run with the specified ID is not found.
 
-## 3. `WARN`
-- **Purpose**: Indicates a potentially harmful situation that does not immediately affect the program.
-- **When to Use**: Use `WARN` for issues that might become problematic, such as deprecated methods, high memory usage, or configuration issues.
-- **Example**: Application is running with a configuration that may lead to performance issues.
+### 5. Delete a Run
+- **URL**: `/api/runs/{id}`
+- **Method**: `DELETE`
+- **Description**: Deletes a specific run by its ID.
+- **Path Parameter**:
+    - `id` (Integer): Unique identifier of the run to delete.
+- **Response**:
+    - `204 No Content`: If the run is successfully deleted.
+    - `404 Not Found`: If the run with the specified ID is not found.
 
-## 4. `INFO`
-- **Purpose**: Provides general information about the application’s flow.
-- **When to Use**: Use `INFO` for standard operations, like service starts, configuration settings, or the successful completion of significant tasks.
-- **Example**: A server starts successfully, or a user logs in.
+## Code Explanation
 
-## 5. `DEBUG`
-- **Purpose**: Contains detailed information useful for debugging.
-- **When to Use**: Use `DEBUG` to gain insights into the internal workings of the application, including variable values and detailed flow control. Commonly used in development, rather than in production.
-- **Example**: Logging the response from a database query or API request.
+### `RunController.java`
+- **Purpose**: Defines the REST endpoints for managing runs.
+- **Constructor**: Accepts an instance of `RunRepository` to interact with the data layer.
+- **Endpoints**:
+    - `getRuns()`: Retrieves all runs.
+    - `findById()`: Finds a specific run by ID or throws a `ResponseStatusException` if not found.
+    - `create()`: Adds a new run.
+    - `update()`: Updates an existing run by ID.
+    - `delete()`: Deletes a run by ID.
 
-## 6. `TRACE`
-- **Purpose**: Provides highly detailed information, down to the step-by-step flow of the code.
-- **When to Use**: Use `TRACE` for very fine-grained details, like entry and exit of methods, which can be beneficial when diagnosing issues that require a comprehensive understanding of the code flow.
-- **Example**: Entering and exiting each method in a service class.
+### `Run.java`
+- **Purpose**: Represents the structure of a run as a record. Contains fields:
+    - `id` (Integer): Unique identifier.
+    - `title` (String): Title of the run.
+    - `startedOn` (LocalDateTime): Start time of the run.
+    - `completedOn` (LocalDateTime): Completion time of the run.
+    - `miles` (Integer): Distance covered in miles.
+    - `location` (Location): Location type (INDOOR or OUTDOOR).
 
----
+### `RunRepository.java`
+- **Purpose**: Acts as an in-memory data store for `Run` objects.
+- **Methods**:
+    - `findAll()`: Returns all stored runs.
+    - `findById()`: Retrieves a run by ID, if present.
+    - `create()`: Adds a new run to the list.
+    - `update()`: Updates an existing run.
+    - `delete()`: Removes a run by ID.
+- **`@PostConstruct init()`**: Preloads the repository with sample data.
 
-## How and When to Use Log Levels Effectively
-- **Production Environments**: Typically only `ERROR` and `FATAL` messages are logged by default, as these provide crucial information without overwhelming the logs.
-- **Development and Debugging**: Enable `DEBUG` or `TRACE` levels to troubleshoot and diagnose issues, but avoid leaving them on in production to prevent performance degradation.
-- **Configuring Log Levels**: Most logging frameworks allow configuring the log level threshold dynamically. For instance, setting the log level to `WARN` will capture `WARN`, `ERROR`, and `FATAL` messages, filtering out lower-priority logs.
+### `Application.java`
+- **Purpose**: Main entry point of the application.
+- **CommandLineRunner**: Logs a sample run upon startup, demonstrating run creation.
 
-Using log levels effectively helps you maintain a clear, concise logging system that provides meaningful insights without clutter.
+### `Location.java`
+- **Enum**: Defines two possible location types:
+    - `INDOOR`
+    - `OUTDOOR`
+
+## Usage Example
+
+To create a new run, send a `POST` request to `/api/runs` with JSON body:
+```json
+{
+  "id": 3,
+  "title": "Morning Run",
+  "startedOn": "2024-11-14T06:00:00",
+  "completedOn": "2024-11-14T07:00:00",
+  "miles": 6,
+  "location": "OUTDOOR"
+}
